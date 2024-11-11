@@ -1,0 +1,71 @@
+ //malloc, free
+// #include <sys/wait.h>
+// #include <sys/types.h>
+//#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <semaphore.h>   //sem_wait,sem_post
+#include <pthread.h>    //POSIX pthread-create,join
+
+sem_t r;// Semaphore for controlling access to read count
+sem_t w;  // Semaphore for controlling access to the shared resource
+int r_count = 0;  // Number of readers currently reading
+
+void *Reader(void *arg)
+{
+	sem_wait(&r); // Lock r_mutex to increment read_count
+	r_count++;
+
+	if (r_count == 1)  // If it's the first reader, lock the write semaphore
+	{
+		sem_wait(&w);
+	}
+	sem_post(&r); // Unlock r_mutex
+	printf("\nReader is reading");
+
+     // Exit section for the reader
+	sem_wait(&r);  // Lock r_mutex to decrement read_count
+	r_count--;
+     	 // If there are no more readers, unlock the write semaphore
+	if (r_count == 0)
+	{
+		sem_post(&w);
+	}
+	sem_post(&r); // Unlock r_mutex
+}
+
+void *Writer(void *arg)
+{
+	sem_wait(&w);  // Lock write semaphore to get exclusive access
+
+	printf("\n Writer  is writing");
+    
+      // Exit section for the writer
+	sem_post(&w);  // Unlock write semaphore
+}
+
+
+int main()
+{
+	pthread_t reader[3], writer[3];
+	sem_init(&r, 0, 1);  // Initialize r_mutex semaphore to 1
+	sem_init(&w, 0, 1);
+
+     // Creating reader and writer threads
+	for (int i = 0; i < 3; i++)
+	{
+		pthread_create(&reader[i], NULL, Reader, NULL);
+		pthread_create(&writer[i], NULL, Writer, NULL);
+	}
+
+    // Joining the reader and writer threads
+	for (int i = 0; i < 3; i++)
+	{
+		pthread_join(reader[i], NULL);
+		pthread_join(writer[i], NULL);
+	}
+
+	// sleep(2);
+
+	return 0;
+}
