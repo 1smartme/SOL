@@ -1,67 +1,96 @@
+//FILE 1
+
 #include <stdio.h>
+#include <string.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+int main() 
+{
+    char *fifo1 = "fifo1";
+    char *fifo2 = "fifo2";
+    char ch, buffer[100];
+    int d1, i = 0;
+    mkfifo(fifo1, 0666);
+    d1 = open(fifo1, O_WRONLY);
+    printf("\nEnter data (end with #): ");
+    ch = getchar();
+    while (ch != '#') 
+    {
+        buffer[i] = ch;
+        i++;
+        ch = getchar();
+    }
+    buffer[i] = '#';
+    write(d1, buffer, sizeof(buffer));
+    close(d1);
+    sleep(2);
+    int d2 = open(fifo2, O_RDONLY);
+    char buffer2[100];
+    read(d2, buffer2, sizeof(buffer2));
+    printf("User2: %s\n", buffer2);
+    close(d2);
+    FILE *fptr = fopen(buffer2, "r");
+    if (fptr == NULL) 
+    {
+        perror("Error opening file");
+        return 1;
+    }
+    while ((ch = fgetc(fptr)) != EOF) 
+    {
+        printf("%c", ch);
+    }
+    fclose(fptr);
+    return 0;
+}
 
-struct Page {
-    int position;
-    int value;
-};
 
+//File 2
+
+#include <stdio.h>
+#include <string.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 int main() {
-    int n, pagefaults = 0, hits = 0;
-    struct Page frames[3]; // Fixed frame size of 3
-    for (int i = 0; i < 3; i++) {
-        frames[i].value = -1; // Initialize frames with an invalid value
-        frames[i].position = -1;
+    char *fifo1 = "fifo1";
+    char *fifo2 = "fifo2";
+    char buffer1[100];
+    int d1, d2, i = 0, cc = 0, ln = 0, wc = 0;
+    d1 = open(fifo1, O_RDONLY);
+    read(d1, buffer1, sizeof(buffer1));
+    while (buffer1[i] != '#' && buffer1[i] != '\0') 
+    {
+    if (buffer1[i] == ' ') 
+    {
+        wc++;
+    } 
+    else if (buffer1[i] == '\n') 
+    {
+        ln++;
+        wc++;
+    }   
+    else 
+    {
+        cc++;
     }
-
-    printf("Enter the number of pages: ");
-    scanf("%d", &n);
-    
-    struct Page pages[n];
-    for (int i = 0; i < n; i++) {
-        printf("Enter page value for position %d: ", i);
-        scanf("%d", &pages[i].value);
-        pages[i].position = i;
+    i++;
     }
-
-    // Page Replacement Simulation
-    for (int i = 0; i < n; i++) {
-        int pagefound = 0;
-        
-        // Check if page is already in frames
-        for (int j = 0; j < 3; j++) {
-            if (frames[j].value == pages[i].value) {
-                hits++;
-                frames[j].position = i; // Update position for LRU tracking
-                pagefound = 1;
-                break;
-            }
-        }
-
-        // If page is not found, we have a page fault
-        if (!pagefound) {
-            pagefaults++;
-            int min_index = 0;
-            
-            // Find the LRU page
-            for (int k = 1; k < 3; k++) {
-                if (frames[k].position < frames[min_index].position) {
-                    min_index = k;
-                }
-            }
-            
-            // Replace the LRU page
-            frames[min_index].value = pages[i].value;
-            frames[min_index].position = i;
-        }
+    FILE *fp = fopen("Memory.txt", "w");
+    if (fp == NULL) 
+    {
+        perror("Error opening file");
+        return 1;
     }
-
-    printf("\nFinal Frame Contents: ");
-    for (int i = 0; i < 3; i++) {
-        printf("%d ", frames[i].value);
-    }
-    
-    printf("\nTotal Page Faults: %d\n", pagefaults);
-    printf("Total Hits: %d\n", hits);
-
+    fprintf(fp, "\nLine count = %d", ln);
+    fprintf(fp, "\nWord count = %d", wc);
+    fprintf(fp, "\nCharacter count = %d", cc);
+    fclose(fp);
+    mkfifo(fifo2, 0666);
+    d2 = open(fifo2, O_WRONLY);
+    write(d2, "Memory.txt", 14);
+    close(d2);
     return 0;
 }
