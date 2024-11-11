@@ -99,11 +99,10 @@ void main() {
 
 	int arr[n];
 
-	for(int i=0; i<n; i++) {
-
-		scanf("%d",&arr[i]);
-
-	}
+	 printf("Enter the elements:\n");
+         for (int i = 0; i < n; i++) {
+             scanf("%d", &arr[i]);
+         }
 //fork -> system call -> replica (child process)
 	pid_t pid;
 	pid=fork();
@@ -116,7 +115,6 @@ void main() {
 			bubblesort(arr,n);
 			printf("\n Parent sorted array");
 			for(int i=0; i<n; i++) {
-
 				printf("%d",arr[i]);
 			}
 			printf("\n"); //execute
