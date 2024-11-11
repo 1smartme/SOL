@@ -92,3 +92,29 @@ int main() {
     
     return 0;
 }
+
+
+alloc[0][0] = 0   alloc[0][1] = 1   alloc[0][2] = 0
+alloc[1][0] = 2   alloc[1][1] = 0   alloc[1][2] = 0
+alloc[2][0] = 3   alloc[2][1] = 0   alloc[2][2] = 2
+alloc[3][0] = 2   alloc[3][1] = 1   alloc[3][2] = 1
+alloc[4][0] = 0   alloc[4][1] = 0   alloc[4][2] = 2
+
+max[0][0] = 7   max[0][1] = 5   max[0][2] = 3
+max[1][0] = 3   max[1][1] = 2   max[1][2] = 2
+max[2][0] = 9   max[2][1] = 0   max[2][2] = 2
+max[3][0] = 2   max[3][1] = 2   max[3][2] = 2
+max[4][0] = 4   max[4][1] = 3   max[4][2] = 3
+
+avail[0] = 3
+avail[1] = 3
+avail[2] = 2
+
+need[0][0] = 7   need[0][1] = 4   need[0][2] = 3
+need[1][0] = 1   need[1][1] = 2   need[1][2] = 2
+need[2][0] = 6   need[2][1] = 0   need[2][2] = 0
+need[3][0] = 0   need[3][1] = 1   need[3][2] = 1
+need[4][0] = 4   need[4][1] = 3   need[4][2] = 1
+
+P1 -> P3 -> P4 -> P0 -> P2
+
