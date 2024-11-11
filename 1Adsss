@@ -1,0 +1,69 @@
+#! /bin/bash
+
+echo "enter filename"
+read fname
+touch $fname
+repeat=1
+while [ $repeat == 1 ]
+do
+	echo -e "\n1.Insert record\n2.Display record\n3.Search pattern\n4.Delete record\n5.Modify record\n"
+	read ch
+	case $ch in
+	1)
+		echo -e "\nenter eid"
+		read eid
+		echo -e "\nenter ename"
+		read ename
+		echo -e "\nenter ecity"
+		read ecity
+		echo -e "\nenter mno"
+		read mno
+		echo -e "$eid\t$ename\t$ecity\t$mno" >> $fname
+		;;
+
+
+	2)
+		if [ -s $fname ]
+		then
+			cat $fname
+		else
+			echo -e "\n File is empty"
+		fi
+		;;
+
+	3)
+		echo -e "\nenter pattern to search"
+		read pat
+		grep $pat $fname
+		if [ $? -eq 0 ]
+		then
+			echo "pattern found"
+		else
+			echo "not found"
+		fi
+		;;
+		
+	4)
+		echo -e "\nEnter name to delete record for"
+		read name1
+		grep -v $name1  $fname >temp
+		if [ $? -eq 0 ]
+		then
+			echo -e "\n Record deleted"
+			mv temp $fname
+		else
+			echo -e "\nRecord not found"
+		fi
+		;;
+	5)
+		echo -e "\nEnter record to modify"
+		read mod
+		echo -e "\nEnter record"
+		read mod1
+		cat $fname | sed -i "s/$mod/$mod1/" $fname
+		;;
+	esac
+	echo "do you want to continue [1/0] ??"
+	read repeat
+done
+ 
