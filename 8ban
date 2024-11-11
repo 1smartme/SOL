@@ -1,0 +1,117 @@
+#include <stdio.h>
+
+#define P 5    // Number of processes
+#define R 3    // Number of resources
+
+void input(int arr[P][R]) {
+    for (int i = 0; i < P; i++) {
+        printf("Enter resources for process P%d: ", i);
+        for (int j = 0; j < R; j++) {
+            scanf("%d", &arr[i][j]);
+        }
+    }
+}
+
+void restore_available(int available[], int total[], int allocated[P][R]) {
+    for (int j = 0; j < R; j++) {
+        available[j] = total[j];
+        for (int i = 0; i < P; i++) {
+            available[j] -= allocated[i][j];
+        }
+    }
+}
+
+int is_safe(int need[P][R], int allocated[P][R], int available[]) {
+    int finish[P] = {0}; // To track if process can complete
+    int work[R];
+    for (int i = 0; i < R; i++) work[i] = available[i];
+
+    int safe_sequence[P], index = 0;
+
+    for (int count = 0; count < P; count++) {
+        int found = 0;
+        for (int i = 0; i < P; i++) {
+            if (!finish[i]) {
+                int j;
+                for (j = 0; j < R; j++) {
+                    if (need[i][j] > work[j]) break;
+                }
+                if (j == R) { // If all resources are available
+                    for (int k = 0; k < R; k++) work[k] += allocated[i][k];
+                    safe_sequence[index++] = i;
+                    finish[i] = 1;
+                    found = 1;
+                }
+            }
+        }
+        if (!found) return 0; // No safe sequence
+    }
+
+    printf("Safe sequence is: ");
+    for (int i = 0; i < P; i++) printf("P%d ", safe_sequence[i]);
+    printf("\n");
+    return 1;
+}
+
+int main() {
+    int allocated[P][R], max[P][R], need[P][R];
+    int total[R] = {10, 5, 7}; // Total resources
+    int available[R];
+
+    printf("Enter allocated resources:\n");
+    input(allocated);
+
+    printf("Enter maximum resources:\n");
+    input(max);
+
+    // Calculate need matrix
+    for (int i = 0; i < P; i++) {
+        for (int j = 0; j < R; j++) {
+            need[i][j] = max[i][j] - allocated[i][j];
+        }
+    }
+
+    // Calculate initial available resources
+    restore_available(available, total, allocated);
+
+    int p, request[R];
+    printf("Enter process ID for resource request: ");
+    scanf("%d", &p);
+
+    printf("Enter resource request:\n");
+    for (int i = 0; i < R; i++) scanf("%d", &request[i]);
+
+    // Check if request is valid
+    int can_allocate = 1;
+    for (int i = 0; i < R; i++) {
+        if (request[i] > need[p][i] || request[i] > available[i]) {
+            can_allocate = 0;
+            break;
+        }
+    }
+
+    if (can_allocate) {
+        // Temporarily allocate resources
+        for (int i = 0; i < R; i++) {
+            available[i] -= request[i];
+            allocated[p][i] += request[i];
+            need[p][i] -= request[i];
+        }
+
+        if (is_safe(need, allocated, available)) {
+            printf("Request can be granted safely.\n");
+        } else {
+            printf("Request cannot be granted safely. Rolling back.\n");
+            for (int i = 0; i < R; i++) { // Rollback allocation
+                available[i] += request[i];
+                allocated[p][i] -= request[i];
+                need[p][i] += request[i];
+            }
+        }
+    } else {
+        printf("Request cannot be granted due to exceeding limits.\n");
+    }
+
+    return 0;
+}
+
