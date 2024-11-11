@@ -1,0 +1,189 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <limits.h>
+
+#define MAX_REQUESTS 100
+#define DISK_SIZE 200
+
+// Integer comparison function for qsort
+int compare(const void *a, const void *b) {
+    return (*(int *)a - *(int *)b);
+}
+
+// Function for SSTF (Shortest Seek Time First) Scheduling
+void SSTF(int requests[], int n, int head) {
+    int totalSeekTime = 0;
+    bool visited[MAX_REQUESTS] = {false};
+
+    printf("SSTF Order: %d", head);
+
+    for (int i = 0; i < n; i++) {
+        int closest = -1;
+        int minDistance = INT_MAX;
+
+        // Find the closest unvisited request
+        for (int j = 0; j < n; j++) {
+            if (!visited[j]) {
+                int distance = abs(head - requests[j]);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closest = j;
+                }
+            }
+        }
+
+        visited[closest] = true;
+        totalSeekTime += minDistance;
+        head = requests[closest];
+        printf(" -> %d", head);
+    }
+
+    printf("\nTotal Seek Time: %d\n", totalSeekTime);
+}
+
+// Function for SCAN (Elevator) Scheduling
+void SCAN(int requests[], int n, int head, bool direction) {
+    int totalSeekTime = 0;
+    int last = head;
+
+    // Sort the requests
+    qsort(requests, n, sizeof(int), compare);
+
+    printf("SCAN Order: %d", head);
+
+    // If moving towards left (decreasing direction)
+    if (!direction) {
+        for (int i = n - 1; i >= 0; i--) {
+            if (requests[i] <= head) {
+                totalSeekTime += abs(requests[i] - last);
+                printf(" -> %d", requests[i]);
+                last = requests[i];
+            }
+        }
+
+        // Move to the start of the disk
+        if (last != 0) {
+            totalSeekTime += last;
+            printf(" -> 0");
+            last = 0;
+        }
+
+        // Process requests on the right side of head position
+        for (int i = 0; i < n; i++) {
+            if (requests[i] > head) {
+                totalSeekTime += abs(requests[i] - last);
+                printf(" -> %d", requests[i]);
+                last = requests[i];
+            }
+        }
+    }
+    // If moving towards the right (increasing direction)
+    else {
+        for (int i = 0; i < n; i++) {
+            if (requests[i] >= head) {
+                totalSeekTime += abs(requests[i] - last);
+                printf(" -> %d", requests[i]);
+                last = requests[i];
+            }
+        }
+
+        // Move to the end of the disk
+        if (last != DISK_SIZE - 1) {
+            totalSeekTime += (DISK_SIZE - 1 - last);
+            printf(" -> %d", DISK_SIZE - 1);
+            last = DISK_SIZE - 1;
+        }
+
+        // Process requests on the left side of head position
+        for (int i = n - 1; i >= 0; i--) {
+            if (requests[i] < head) {
+                totalSeekTime += abs(requests[i] - last);
+                printf(" -> %d", requests[i]);
+                last = requests[i];
+            }
+        }
+    }
+
+    printf("\nTotal Seek Time: %d\n", totalSeekTime);
+}
+
+// Function for C-LOOK Scheduling
+void CLOOK(int requests[], int n, int head) {
+    int totalSeekTime = 0;
+
+    // Sort the requests array
+    qsort(requests, n, sizeof(int), compare);
+  //  sort(requests, requests + n);
+
+    int index = 0;
+    // Find the first request greater than or equal to head
+    while (index < n && requests[index] < head) {
+        index++;
+    }
+
+    printf("C-LOOK Order: %d", head);
+
+    // Service requests to the right of the head
+    for (int i = index; i < n; i++) {
+        printf(" -> %d", requests[i]);
+        totalSeekTime += abs(head - requests[i]);
+        head = requests[i];
+    }
+
+    // Jump to the left-most request
+    if (index > 0) {
+        totalSeekTime += abs(head - requests[0]);
+        head = requests[0];
+        printf(" -> %d", head);
+    }
+
+    // Service remaining requests on the left
+    for (int i = 1; i < index; i++) {
+        printf(" -> %d", requests[i]);
+        totalSeekTime += abs(head - requests[i]);
+        head = requests[i];
+    }
+
+    printf("\nTotal Seek Time: %d\n", totalSeekTime);
+}
+
+int main() {
+    int n, head;
+    int requests[MAX_REQUESTS];
+    int choice;
+    int direction;
+
+    printf("Enter the number of requests: ");
+    scanf("%d", &n);
+
+    printf("Enter the requests: ");
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &requests[i]);
+    }
+
+    printf("Enter the initial head position: ");
+    scanf("%d", &head);
+
+    printf("Select an algorithm:\n");
+    printf("1. SSTF\n2. SCAN\n3. C-LOOK\n");
+    scanf("%d", &choice);
+
+    switch (choice) {
+        case 1:
+            SSTF(requests, n, head);
+            break;
+        case 2:
+            printf("Enter initial direction (0 for left, 1 for right): ");
+            scanf("%d", &direction);
+            SCAN(requests, n, head, direction);
+            break;
+        case 3:
+            CLOOK(requests, n, head);
+            break;
+        default:
+            printf("Invalid choice.\n");
+    }
+
+    return 0;
+}
