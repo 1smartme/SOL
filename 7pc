@@ -1,0 +1,66 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <semaphore.h>
+
+#define MAX 5   // Buffer size
+#define NTHREADS 2 // Two threads: Producer and Consumer
+
+sem_t empty, full;         // Semaphores to track empty and full slots
+pthread_mutex_t mutex;     // Mutex to protect critical section
+int buffer[MAX], in = 0, out = 0; // Buffer and pointers for producer-consumer
+
+// Producer function
+void* producer(void* arg) {
+    for(int i = 0; i < 10; i++) {
+        sem_wait(&empty); // Wait for an empty slot
+        pthread_mutex_lock(&mutex); // Lock the buffer
+
+        buffer[in] = i; // Produce an item
+        printf("Producer produced item %d at index %d\n", buffer[in], in);
+        in = (in + 1) % MAX; // Circular buffer increment
+
+        pthread_mutex_unlock(&mutex); // Unlock the buffer
+        sem_post(&full); // Signal that a new item is produced
+    }
+    return NULL;
+}
+
+// Consumer function
+void* consumer(void* arg) {
+    for(int i = 0; i < 10; i++) {
+        sem_wait(&full); // Wait for a full slot
+        pthread_mutex_lock(&mutex); // Lock the buffer
+
+        printf("Consumer consumed item %d from index %d\n", buffer[out], out);
+        out = (out + 1) % MAX; // Circular buffer increment
+
+        pthread_mutex_unlock(&mutex); // Unlock the buffer
+        sem_post(&empty); // Signal that a slot is now empty
+    }
+    return NULL;
+}
+
+int main() {
+    pthread_t tid[NTHREADS];
+
+    // Initialize semaphores and mutex
+    sem_init(&empty, 0, MAX); // 'empty' starts with MAX empty slots
+    sem_init(&full, 0, 0);    // 'full' starts with 0 full slots
+    pthread_mutex_init(&mutex, NULL);
+
+    // Create producer and consumer threads
+    pthread_create(&tid[0], NULL, producer, NULL);
+    pthread_create(&tid[1], NULL, consumer, NULL);
+
+    // Wait for both threads to finish
+    pthread_join(tid[0], NULL);
+    pthread_join(tid[1], NULL);
+
+    // Destroy semaphores and mutex
+    sem_destroy(&empty);
+    sem_destroy(&full);
+    pthread_mutex_destroy(&mutex);
+
+    return 0;
+}
