@@ -1,4 +1,4 @@
-file1 (EXECVE)
+//file1 (EXECVE)
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
 
 
 
-file 2 (NO EXECVE)
+//file 2 (NO EXECVE)
 
 #include <stdio.h>
 #include <sys/types.h>
